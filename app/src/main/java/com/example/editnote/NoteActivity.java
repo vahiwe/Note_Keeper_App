@@ -24,6 +24,7 @@ import android.widget.Spinner;
 
 import com.example.editnote.NoteKeeperDatabaseContract.CourseInfoEntry;
 import com.example.editnote.NoteKeeperDatabaseContract.NoteInfoEntry;
+import com.example.editnote.NoteKeeperProviderContract.Course;
 
 import java.util.List;
 
@@ -382,13 +383,14 @@ public class NoteActivity extends AppCompatActivity
 
     private CursorLoader createLoaderCourses() {
         mCoursesQueryFinished = false;
-        Uri uri = Uri.parse("content://com.example.editnote.provider");
+//        Uri uri = Uri.parse("content://com.example.editnote.provider");
+        Uri uri = Course.CONTENT_URI;
         String[] courseColumns = {
-                CourseInfoEntry.COLUMN_COURSE_TITLE,
-                CourseInfoEntry.COLUMN_COURSE_ID,
-                CourseInfoEntry._ID
+                Course.COLUMN_COURSE_TITLE,
+                Course.COLUMN_COURSE_ID,
+                Course._ID
         };
-        return new CursorLoader(this, uri, courseColumns, null, null, CourseInfoEntry.COLUMN_COURSE_TITLE);
+        return new CursorLoader(this, uri, courseColumns, null, null, Course.COLUMN_COURSE_TITLE);
 //
 //        return new CursorLoader(this) {
 //            @Override

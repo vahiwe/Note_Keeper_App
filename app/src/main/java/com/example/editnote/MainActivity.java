@@ -29,6 +29,8 @@ import android.widget.TextView;
 
 import com.example.editnote.NoteKeeperDatabaseContract.CourseInfoEntry;
 import com.example.editnote.NoteKeeperDatabaseContract.NoteInfoEntry;
+import com.example.editnote.NoteKeeperProviderContract.Course;
+import com.example.editnote.NoteKeeperProviderContract.Notes;
 
 import java.util.List;
 
@@ -229,23 +231,32 @@ public class MainActivity extends AppCompatActivity
     public Loader<Cursor> onCreateLoader(int i, @Nullable Bundle bundle) {
         CursorLoader loader = null;
         if (i == LOADER_NOTES){
-             loader = new CursorLoader(this){
-                @Override
-                public Cursor loadInBackground() {
-                    SQLiteDatabase db = mDbOpenHelper.getReadableDatabase();
-                    final String[] noteColumns = {
-                            NoteInfoEntry.COLUMN_NOTE_TITLE,
-                            NoteInfoEntry.getQName(NoteInfoEntry._ID),
-                            CourseInfoEntry.COLUMN_COURSE_TITLE};
-                    // note_info JOIN course_info ON note_info.course_id = course_info.course_id
-                    String tablesWithJoin = NoteInfoEntry.TABLE_NAME + " JOIN " +
-                            CourseInfoEntry.TABLE_NAME + " ON " +
-                            NoteInfoEntry.getQName(NoteInfoEntry.COLUMN_COURSE_ID) + " = " +
-                            CourseInfoEntry.getQName(CourseInfoEntry.COLUMN_COURSE_ID);
-                    String noteOrderBy = CourseInfoEntry.COLUMN_COURSE_TITLE + "," + NoteInfoEntry.COLUMN_NOTE_TITLE;
-                    return db.query(tablesWithJoin, noteColumns, null, null, null, null, noteOrderBy);
-                }
-            };
+            final String[] noteColumns = {
+                    Notes._ID,
+                    Notes.COLUMN_NOTE_TITLE,
+//                    NoteInfoEntry.getQName(NoteInfoEntry._ID),
+                    Notes.COLUMN_COURSE_TITLE};
+            String noteOrderBy = Course.COLUMN_COURSE_TITLE + "," + Notes.COLUMN_NOTE_TITLE;
+
+            loader = new CursorLoader(this, Notes.CONTENT_EXPANDED_URI, noteColumns,
+                    null, null, noteOrderBy);
+//             loader = new CursorLoader(this){
+//                @Override
+//                public Cursor loadInBackground() {
+//                    SQLiteDatabase db = mDbOpenHelper.getReadableDatabase();
+//                    final String[] noteColumns = {
+//                            NoteInfoEntry.COLUMN_NOTE_TITLE,
+//                            NoteInfoEntry.getQName(NoteInfoEntry._ID),
+//                            CourseInfoEntry.COLUMN_COURSE_TITLE};
+//                    // note_info JOIN course_info ON note_info.course_id = course_info.course_id
+//                    String tablesWithJoin = NoteInfoEntry.TABLE_NAME + " JOIN " +
+//                            CourseInfoEntry.TABLE_NAME + " ON " +
+//                            NoteInfoEntry.getQName(NoteInfoEntry.COLUMN_COURSE_ID) + " = " +
+//                            CourseInfoEntry.getQName(CourseInfoEntry.COLUMN_COURSE_ID);
+//                    String noteOrderBy = CourseInfoEntry.COLUMN_COURSE_TITLE + "," + NoteInfoEntry.COLUMN_NOTE_TITLE;
+//                    return db.query(tablesWithJoin, noteColumns, null, null, null, null, noteOrderBy);
+//                }
+//            };
         }
         return loader;
     }

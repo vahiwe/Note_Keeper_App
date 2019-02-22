@@ -2,14 +2,34 @@ package com.example.editnote;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;
+import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.provider.BaseColumns;
 
 import com.example.editnote.NoteKeeperDatabaseContract.CourseInfoEntry;
+import com.example.editnote.NoteKeeperDatabaseContract.NoteInfoEntry;
+import com.example.editnote.NoteKeeperProviderContract.Course;
+import com.example.editnote.NoteKeeperProviderContract.CourseIdColumns;
+import com.example.editnote.NoteKeeperProviderContract.Notes;
 
 public class NoteKeeperProvider extends ContentProvider {
     NoteKeeperOpenHelper mDbOpenHelper;
+
+    private static UriMatcher sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
+
+    public static final int COURSES = 0;
+
+    public static final int NOTES = 1;
+
+    public static final int NOTES_EXPANDED = 2;
+
+    static {
+        sUriMatcher.addURI(NoteKeeperProviderContract.AUTHORITY, Course.PATH, COURSES);
+        sUriMatcher.addURI(NoteKeeperProviderContract.AUTHORITY, Notes.PATH, NOTES);
+        sUriMatcher.addURI(NoteKeeperProviderContract.AUTHORITY, Notes.PATH_EXPANDED, NOTES_EXPANDED);
+    }
 
     public NoteKeeperProvider() {
     }
@@ -47,9 +67,44 @@ public class NoteKeeperProvider extends ContentProvider {
 //        throw new UnsupportedOperationException("Not yet implemented");
         Cursor cursor = null;
         SQLiteDatabase db = mDbOpenHelper.getReadableDatabase();
-        db.query(CourseInfoEntry.TABLE_NAME, projection, selection, selectionArgs,
-                null, null, sortOrder);
+
+        int uriMatch = sUriMatcher.match(uri);
+        switch (uriMatch) {
+            case COURSES:
+                cursor= db.query(CourseInfoEntry.TABLE_NAME, projection, selection, selectionArgs,
+                        null, null, sortOrder);
+                break;
+            case NOTES:
+                cursor = db.query(NoteInfoEntry.TABLE_NAME, projection, selection, selectionArgs,
+                        null, null, sortOrder);
+                break;
+            case NOTES_EXPANDED:
+                cursor = notesExpandedQuery(db, projection, selection, selectionArgs, sortOrder);
+        }
+
         return cursor;
+    }
+
+    private Cursor notesExpandedQuery(SQLiteDatabase db, String[] projection, String selection,
+                                      String[] selectionArgs, String sortOrder) {
+//        final String[] noteColumns = {
+//                NoteInfoEntry.COLUMN_NOTE_TITLE,
+//                NoteInfoEntry.getQName(NoteInfoEntry._ID),
+//                CourseInfoEntry.COLUMN_COURSE_TITLE};
+//        String noteOrderBy = CourseInfoEntry.COLUMN_COURSE_TITLE + "," + NoteInfoEntry.COLUMN_NOTE_TITLE;
+
+        String[] columns = new String[projection.length];
+        for (int idx = 0; idx < projection.length; idx++) {
+            columns[idx] = projection[idx].equals(BaseColumns._ID) ||
+                    projection[idx].equals(CourseIdColumns.COLUMN_COURSE_ID) ?
+                    NoteInfoEntry.getQName(projection[idx]) : projection[idx];
+        }
+        // note_info JOIN course_info ON note_info.course_id = course_info.course_id
+        String tablesWithJoin = NoteInfoEntry.TABLE_NAME + " JOIN " +
+                CourseInfoEntry.TABLE_NAME + " ON " +
+                NoteInfoEntry.getQName(NoteInfoEntry.COLUMN_COURSE_ID) + " = " +
+                CourseInfoEntry.getQName(CourseInfoEntry.COLUMN_COURSE_ID);
+        return db.query(tablesWithJoin, columns, selection, selectionArgs, null, null, sortOrder);
     }
 
     @Override
