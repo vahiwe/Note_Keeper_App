@@ -85,7 +85,8 @@ public class MainActivity extends AppCompatActivity
     protected void onResume() {
         super.onResume();
 //        loadNotes();
-        getSupportLoaderManager().restartLoader(LOADER_NOTES, null, this);
+        getSupportLoaderManager().destroyLoader(LOADER_NOTES);
+        getSupportLoaderManager().initLoader(LOADER_NOTES, null, this);
         updateNavHeader();
     }
 
