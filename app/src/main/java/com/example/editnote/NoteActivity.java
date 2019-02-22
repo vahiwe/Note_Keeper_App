@@ -1,5 +1,6 @@
 package com.example.editnote;
 
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
@@ -25,6 +26,7 @@ import android.widget.Spinner;
 import com.example.editnote.NoteKeeperDatabaseContract.CourseInfoEntry;
 import com.example.editnote.NoteKeeperDatabaseContract.NoteInfoEntry;
 import com.example.editnote.NoteKeeperProviderContract.Course;
+import com.example.editnote.NoteKeeperProviderContract.Notes;
 
 import java.util.List;
 
@@ -56,6 +58,7 @@ public class NoteActivity extends AppCompatActivity
     private SimpleCursorAdapter mAdapterCourses;
     private boolean mCoursesQueryFinished;
     private boolean mNotesQueryFinished;
+    private Uri mNoteUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -226,8 +229,9 @@ public class NoteActivity extends AppCompatActivity
         AsyncTask task = new AsyncTask() {
             @Override
             protected Object doInBackground(Object[] objects) {
-                SQLiteDatabase db = mDbOpenHelper.getWritableDatabase();
-                mNoteId = (int) db.insert(NoteInfoEntry.TABLE_NAME, null,values);
+//                SQLiteDatabase db = mDbOpenHelper.getWritableDatabase();
+//                mNoteId = (int) db.insert(NoteInfoEntry.TABLE_NAME, null,values);
+                mNoteUri = getContentResolver().insert(Notes.CONTENT_URI, values);
                 return null;
             }
         };
@@ -409,27 +413,36 @@ public class NoteActivity extends AppCompatActivity
 
     private CursorLoader createLoaderNotes() {
         mNotesQueryFinished = false;
-        return new CursorLoader(this) {
-            @Override
-            public Cursor loadInBackground() {
-                SQLiteDatabase  db = mDbOpenHelper.getReadableDatabase();
 
-                String courseId = "android_intents";
-                String titleStart = "dynamic";
-
-                String selection = NoteInfoEntry._ID + " = ?";
-                String[] selectionArgs = {Integer.toString(mNoteId)};
-
-                String[] noteColumns = {
-                        NoteInfoEntry.COLUMN_COURSE_ID,
-                        NoteInfoEntry.COLUMN_NOTE_TITLE,
-                        NoteInfoEntry.COLUMN_NOTE_TEXT
-                };
-
-                return db.query(NoteInfoEntry.TABLE_NAME, noteColumns, selection, selectionArgs, null,null,null);
-
-            }
+        String[] noteColumns = {
+                Notes.COLUMN_COURSE_ID,
+                Notes.COLUMN_NOTE_TITLE,
+                Notes.COLUMN_NOTE_TEXT
         };
+
+        mNoteUri = ContentUris.withAppendedId(Notes.CONTENT_URI, mNoteId);
+        return new CursorLoader(this, mNoteUri, noteColumns, null, null, null);
+//        return new CursorLoader(this) {
+//            @Override
+//            public Cursor loadInBackground() {
+//                SQLiteDatabase  db = mDbOpenHelper.getReadableDatabase();
+//
+//                String courseId = "android_intents";
+//                String titleStart = "dynamic";
+//
+//                String selection = NoteInfoEntry._ID + " = ?";
+//                String[] selectionArgs = {Integer.toString(mNoteId)};
+//
+//                String[] noteColumns = {
+//                        NoteInfoEntry.COLUMN_COURSE_ID,
+//                        NoteInfoEntry.COLUMN_NOTE_TITLE,
+//                        NoteInfoEntry.COLUMN_NOTE_TEXT
+//                };
+//
+//                return db.query(NoteInfoEntry.TABLE_NAME, noteColumns, selection, selectionArgs, null,null,null);
+//
+//            }
+//        };
     }
 
     @Override
