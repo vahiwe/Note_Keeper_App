@@ -169,6 +169,9 @@ public class NoteActivity extends AppCompatActivity
         mOriginalNoteCourseId = mNote.getCourse().getCourseId();
         mOriginalNoteTitle = mNote.getTitle();
         mOriginalNoteText = mNote.getText();
+//        mOriginalNoteTitle = mNoteCursor.getString(mNoteTitlePos);
+//        mOriginalNoteText = mNoteCursor.getString(mNoteTextPos);
+//        mOriginalNoteCourseId = mNoteCursor.getString(mCourseIdPos);
     }
 
     private void displayNotes() {
@@ -261,9 +264,18 @@ public class NoteActivity extends AppCompatActivity
             finish();
         } else if (id == R.id.action_next) {
             moveNext();
+        } else if (id == R.id.action_set_reminder) {
+            showReminderNotification();
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void showReminderNotification() {
+        String noteTitle = mtextNoteTitle.getText().toString();
+        String noteText = mtextNoteText.getText().toString();
+        int noteId = (int) ContentUris.parseId(mNoteUri);
+        NoteReminderNotification.notify(this, noteTitle, noteText, noteId);
     }
 
     @Override
@@ -363,10 +375,11 @@ public class NoteActivity extends AppCompatActivity
     }
 
     private void sendEmail() {
-        CourseInfo course = (CourseInfo) mspinnerCourses.getSelectedItem();
+//        CourseInfo course = (CourseInfo) mspinnerCourses.getSelectedItem();
+        String course = selectedCourseId();
         String subject = mtextNoteTitle.getText().toString();
         String text = "Checkout what I learned in the Pluralsight course \"" +
-                course.getTitle() +"\"\n" + mtextNoteText.getText().toString();
+                course +"\"\n" + mtextNoteText.getText().toString();
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.setType("message/rfc2822");
         intent.putExtra(intent.EXTRA_SUBJECT, subject);
