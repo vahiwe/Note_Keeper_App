@@ -57,6 +57,9 @@ public class NoteReminderNotification {
         Intent noteActivityIntent = new Intent(context, NoteActivity.class);
          noteActivityIntent.putExtra(NoteActivity.NOTE_ID, noteId);
 
+         Intent backUpServiceIntent = new Intent(context, NoteBackupService.class);
+         backUpServiceIntent.putExtra(NoteBackupService.EXTRA_COURSE_ID, NoteBackup.ALL_COURSES);
+
 //
 //        final String ticker = exampleString;
 //        final String title = res.getString(
@@ -140,6 +143,17 @@ public class NoteReminderNotification {
                                 context,
                                 0,
                                 new Intent(context, MainActivity.class),
+                                PendingIntent.FLAG_UPDATE_CURRENT
+                        )
+                )
+
+                .addAction(
+                        0,
+                        "Backup notes",
+                        PendingIntent.getService(
+                                context,
+                                0,
+                                backUpServiceIntent,
                                 PendingIntent.FLAG_UPDATE_CURRENT
                         )
                 )

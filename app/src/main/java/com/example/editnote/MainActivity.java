@@ -213,9 +213,18 @@ public class MainActivity extends AppCompatActivity
         if (id == R.id.action_settings) {
             startActivity(new Intent(this, SettingsActivity.class));
             return true;
+        } else if (id == R.id.action_backup) {
+            backUpNotes();
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void backUpNotes() {
+//        NoteBackup.doBackup(this, NoteBackup.ALL_COURSES);
+        Intent intent = new Intent(this, NoteBackupService.class);
+        intent.putExtra(NoteBackupService.EXTRA_COURSE_ID, NoteBackup.ALL_COURSES);
+        startService(intent);
     }
 
     @SuppressWarnings("StatementWithEmptyBody")
