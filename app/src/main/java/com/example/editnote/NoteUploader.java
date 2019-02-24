@@ -2,16 +2,24 @@ package com.example.editnote;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.net.Uri;
 import android.util.Log;
 
 import com.example.editnote.NoteKeeperProviderContract.Notes;
 
-public class NoteBackup {
+public class NoteUploader {
+    private static final String TAG = NoteUploader.class.getSimpleName();
 
-    public static final String ALL_COURSES = "ALL_COURSES";
-    private static final String TAG = NoteBackup.class.getSimpleName();
+    private final Context mContext;
+    private boolean mCanceled;
 
-    public static void doBackup(Context context, String backupCourseId) {
+    public NoteUploader (Context context) { mContext = context;}
+
+    public boolean isCanceled () { return mCanceled;}
+
+    public void cancel () {mCanceled = true;}
+
+    public void doUpload(Uri uri) {
 
         String[] columns = {
                 Notes.COLUMN_COURSE_ID,
@@ -19,33 +27,29 @@ public class NoteBackup {
                 Notes.COLUMN_NOTE_TEXT
         };
 
-        String selection = null;
-        String[] selectionArgs = null;
-        if (!backupCourseId.equals(ALL_COURSES)) {
-            selection = Notes.COLUMN_COURSE_ID + " = ?";
-            selectionArgs = new String[]{backupCourseId};
-        }
 
-        Cursor cursor = context.getContentResolver().query(Notes.CONTENT_URI, columns, selection, selectionArgs, null);
+        Cursor cursor = mContext.getContentResolver().query(uri, columns, null, null, null);
         int noteTitlePos = cursor.getColumnIndex(Notes.COLUMN_NOTE_TITLE);
         int noteTextPos = cursor.getColumnIndex(Notes.COLUMN_NOTE_TEXT);
         int courseIdPos = cursor.getColumnIndex(Notes.COLUMN_COURSE_ID);
 
-        Log.i(TAG, ">>>***  BACKUP START - Thread: " + Thread.currentThread().getId() + "          ***<<<");
 
-        while (cursor.moveToNext()) {
+        Log.i(TAG, ">>>***  UPLOAD START - " + uri + "     ***<<<");
+        mCanceled = false;
+
+        while (!mCanceled && cursor.moveToNext()) {
             String noteTitle = cursor.getString(noteTitlePos);
             String noteText = cursor.getString(noteTextPos);
             String courseId = cursor.getString(courseIdPos);
 
             if (!noteTitle.equals("")) {
-                Log.i(TAG, ">>>Backing Up Note<<< " + courseId + "|" + noteTitle + "|" + noteText );
+                Log.i(TAG, ">>>Uploading Note<<< " + courseId + "|" + noteTitle + "|" + noteText );
                 simulateLongRunningWork();
             }
 
         }
 
-        Log.i(TAG, ">>>***    BACKUP COMPLETE    ***<<< ");
+        Log.i(TAG, ">>>***    UPLOAD COMPLETE    ***<<< ");
         cursor.close();
     }
 
@@ -54,4 +58,5 @@ public class NoteBackup {
             Thread.sleep(1000);
         } catch(Exception ex) {}
     }
+
 }
