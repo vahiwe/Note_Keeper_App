@@ -1,5 +1,7 @@
 package com.example.editnote;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Intent;
@@ -8,6 +10,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
@@ -303,7 +306,27 @@ public class NoteActivity extends AppCompatActivity
         String noteTitle = mtextNoteTitle.getText().toString();
         String noteText = mtextNoteText.getText().toString();
         int noteId = (int) ContentUris.parseId(mNoteUri);
-        NoteReminderNotification.notify(this, noteTitle, noteText, noteId);
+        //NoteReminderNotification.notify(this, noteTitle, noteText, noteId);
+
+
+        Intent intent = new Intent(this, NoteReminderReceiver.class);
+        intent.putExtra(NoteReminderReceiver.EXTRA_NOTE_ID, noteId);
+        intent.putExtra(NoteReminderReceiver.EXTRA_NOTE_TITLE, noteTitle);
+        intent.putExtra(NoteReminderReceiver.EXTRA_NOTE_TEXT, noteText);
+
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+
+        long currentTimeInMilliSeconds = SystemClock.elapsedRealtime();
+        long ONE_HOUR = 60 * 60 * 1000;
+        long TEN_SECONDS = 10 * 1000;
+
+        long alarmTime = currentTimeInMilliSeconds + TEN_SECONDS;
+
+        alarmManager.set(AlarmManager.ELAPSED_REALTIME, alarmTime, pendingIntent);
+
+
     }
 
     @Override
