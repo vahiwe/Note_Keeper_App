@@ -41,6 +41,7 @@ public class NoteActivity extends AppCompatActivity
     public static final int LOADER_COURSES = 1;
     private final String TAG = getClass().getSimpleName();
     public static final String NOTE_ID = "com.example.editnote.NOTE_ID";
+    public static final String NOTE_URI = "com.example.editnote.NOTE_URI";
     public static final String ORIGINAL_NOTE_COURSE_ID = "com.example.editnote.ORIGINAL_NOTE_COURSE_ID";
     public static final String ORIGINAL_NOTE_TITLE = "com.example.editnote.ORIGINAL_NOTE_TITLE";
     public static final String ORIGINAL_NOTE_TEXT = "com.example.editnote.ORIGINAL_NOTE_TEXT";
@@ -92,6 +93,8 @@ public class NoteActivity extends AppCompatActivity
             saveOriginalNoteValues();
         } else {
             restoreOriginalNoteValues(savedInstanceState);
+            String stringNoteUri = savedInstanceState.getString(NOTE_URI);
+            mNoteUri = Uri.parse(stringNoteUri);
         }
 
 
@@ -165,6 +168,8 @@ public class NoteActivity extends AppCompatActivity
         outState.putString(ORIGINAL_NOTE_COURSE_ID, mOriginalNoteCourseId);
         outState.putString(ORIGINAL_NOTE_TITLE, mOriginalNoteTitle);
         outState.putString(ORIGINAL_NOTE_TEXT, mOriginalNoteText);
+
+        outState.putString(NOTE_URI, mNoteUri.toString());
     }
 
     private void saveOriginalNoteValues() {
