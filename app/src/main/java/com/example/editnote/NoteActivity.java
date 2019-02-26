@@ -65,6 +65,7 @@ public class NoteActivity extends AppCompatActivity
     private boolean mCoursesQueryFinished;
     private boolean mNotesQueryFinished;
     private Uri mNoteUri;
+    private ModuleStatusView mViewModuleStatus;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,7 +106,23 @@ public class NoteActivity extends AppCompatActivity
 //            loadNoteData();
             getSupportLoaderManager().initLoader(LOADER_NOTES, null, this);
 
+
+        mViewModuleStatus = findViewById(R.id.module_status);
+        loadModuleStatusValues();
+
         Log.d(TAG, "onCreate");
+    }
+
+    private void loadModuleStatusValues() {
+        // In real life we'd lookup the selected course's statuses from the content provider
+        int totalNumberOfModules = 11;
+        int completedNumberOfModules = 7;
+        boolean[] moduleStatus = new boolean[totalNumberOfModules];
+        for (int i = 0; i < completedNumberOfModules; i++) {
+            moduleStatus[i] = true;
+        }
+
+        mViewModuleStatus.setModuleStatus(moduleStatus);
     }
 
     private void loadCourseData() {
