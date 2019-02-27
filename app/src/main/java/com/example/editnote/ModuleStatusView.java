@@ -7,11 +7,20 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
+import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.view.ViewCompat;
+import android.support.v4.view.accessibility.AccessibilityNodeInfoCompat;
+import android.support.v4.widget.ExploreByTouchHelper;
 import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
+
+import java.util.List;
 
 /**
  * TODO: document your custom view class.
@@ -36,6 +45,7 @@ public class ModuleStatusView extends View {
     private float mRadius;
     private int mMaxHorizontalModules;
     private int mShape;
+    private ModuleStatusAccessibilityHelper mAccessibilityHelper;
 
     public boolean[] getModuleStatus() {
         return mModuleStatus;
@@ -65,6 +75,10 @@ public class ModuleStatusView extends View {
     private void init(AttributeSet attrs, int defStyle) {
         if (isInEditMode())
             setupEditModeValues();
+
+        setFocusable(true);
+        mAccessibilityHelper = new ModuleStatusAccessibilityHelper(this);
+        ViewCompat.setAccessibilityDelegate(this, mAccessibilityHelper);
 
         DisplayMetrics dm = getContext().getResources().getDisplayMetrics();
         float displayDensity = dm.density;
@@ -109,6 +123,22 @@ public class ModuleStatusView extends View {
 
         // Update TextPaint and text measurements from attributes
       //  invalidateTextPaintAndMeasurements();
+    }
+
+    @Override
+    protected void onFocusChanged(boolean gainFocus, int direction, Rect previouslyFocusedRect) {
+        super.onFocusChanged(gainFocus, direction, previouslyFocusedRect);
+        mAccessibilityHelper.onFocusChanged(gainFocus, direction, previouslyFocusedRect);
+    }
+
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        return mAccessibilityHelper.dispatchKeyEvent(event) || super.dispatchKeyEvent(event);
+    }
+
+    @Override
+    protected boolean dispatchHoverEvent(MotionEvent event) {
+        return mAccessibilityHelper.dispatchHoverEvent(event) || super.dispatchHoverEvent(event);
     }
 
     private void setupEditModeValues() {
@@ -249,6 +279,9 @@ public class ModuleStatusView extends View {
         mModuleStatus[moduleIndex] = ! mModuleStatus[moduleIndex];
 
         invalidate();
+
+        mAccessibilityHelper.invalidateVirtualView(moduleIndex);
+        mAccessibilityHelper.sendEventForVirtualView(moduleIndex, AccessibilityNodeInfoCompat.ACTION_CLICK);
     }
 
     private int findItemAtPoint(float x, float y) {
@@ -340,5 +373,50 @@ public class ModuleStatusView extends View {
      */
     public void setExampleDrawable(Drawable exampleDrawable) {
         mExampleDrawable = exampleDrawable;
+    }
+
+    private class ModuleStatusAccessibilityHelper extends ExploreByTouchHelper {
+        public ModuleStatusAccessibilityHelper(@NonNull View host) {
+            super(host);
+        }
+
+        @Override
+        protected int getVirtualViewAt(float v, float v1) {
+            int moduleIndex = findItemAtPoint(v, v1);
+            return moduleIndex == INVALID_INDEX ? ExploreByTouchHelper.INVALID_ID : moduleIndex;
+        }
+
+        @Override
+        protected void getVisibleVirtualViews(List<Integer> list) {
+            if (mModuleRectangles == null)
+                return;
+
+            for (int i = 0; i < mModuleRectangles.length; i++) {
+                list.add(i);
+            }
+
+        }
+
+        @Override
+        protected void onPopulateNodeForVirtualView(int i, @NonNull AccessibilityNodeInfoCompat accessibilityNodeInfoCompat) {
+            accessibilityNodeInfoCompat.setFocusable(true);
+            accessibilityNodeInfoCompat.setBoundsInParent(mModuleRectangles[i]);
+            accessibilityNodeInfoCompat.setContentDescription("Module " + i);
+
+            accessibilityNodeInfoCompat.setCheckable(true);
+            accessibilityNodeInfoCompat.setChecked(mModuleStatus[i]);
+
+            accessibilityNodeInfoCompat.addAction(AccessibilityNodeInfoCompat.ACTION_CLICK);
+        }
+
+        @Override
+        protected boolean onPerformActionForVirtualView(int i, int i1, @Nullable Bundle bundle) {
+            switch (i1) {
+                case AccessibilityNodeInfoCompat.ACTION_CLICK:
+                    onModuleSelected(i);
+                    return true;
+            }
+            return false;
+        }
     }
 }
